@@ -1,31 +1,17 @@
-const App = {
-  items: [], filters: [], actions: [], summaries: [],
-  save() { try { localStorage.setItem('books', JSON.stringify(this.items)); } catch (e) {} },
-  load() { try { this.items = JSON.parse(localStorage.getItem('books')) || []; } catch (e) { this.items = []; } },
-  render() {
-    const ul = document.getElementById('book-list');
-    const box = document.getElementById('summary');
-    ul.innerHTML = ''; box.innerHTML = '';
-    const shown = this.items.filter(b => this.filters.every(f => f(b)));
-    if (!shown.length) ul.innerHTML = '<li class="empty">No books to show.</li>';
-    shown.forEach(b => {
-      const li = document.createElement('li');
-      li.className = b.read ? 'read' : '';
-      const s = document.createElement('span');
-      s.textContent = b.title + ' by ' + b.author + ' [' + b.genre + ']';
-      li.appendChild(s);
-      this.actions.forEach(f => f(li, b));
-      ul.appendChild(li);
-    });
-    this.summaries.forEach(f => f(shown, box));
+(function () {
+  const s = document.getElementById('add-section');
+  s.innerHTML = '<input id="b-title" placeholder="Book title"><input id="b-author" placeholder="Author"><select id="b-genre"><option>Fiction</option><option>Non-fiction</option><option>Science</option><option>Other</option></select><button id="b-add" class="btn">Add</button>';
+  const titleEl = document.getElementById('b-title');
+  const authorEl = document.getElementById('b-author');
+  function addBook() {
+    const title = titleEl.value.trim();
+    const author = authorEl.value.trim();
+    if (!title || !author) { alert('Please enter both title and author.'); return; }
+    if (App.items.some(b => b.title.toLowerCase() === title.toLowerCase())) { alert('This book is already on your shelf.'); return; }
+    App.items.push({ id: Date.now(), title: title, author: author, genre: document.getElementById('b-genre').value, read: false });
+    titleEl.value = ''; authorEl.value = '';
+    App.save(); App.render();
   }
-};
-App.load();
-App.render();
-// Load feature modules (missing ones are skipped until their branch is merged)
-['add', 'status', 'filter'].forEach(n => {
-  const s = document.createElement('script');
-  s.src = 'js/' + n + '.js';
-  s.onerror = () => {};
-  document.body.appendChild(s);
-});
+  document.getElementById('b-add').onclick = addBook;
+  [titleEl, authorEl].forEach(el => el.addEventListener('keydown', e => { if (e.key === 'Enter') addBook(); }));
+})();
